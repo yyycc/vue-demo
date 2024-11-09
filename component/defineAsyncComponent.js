@@ -10,8 +10,30 @@ function defineAsyncComponent(options) {
         timeout,
         delay,
         loadingComponent,
+        onError,
     } = options
     let innerCompo = null
+    
+    let retries = 0
+    function load() {
+        return loader()
+            .catch((error) => {
+                if (onError) {
+                    return new Promise((resolve, reject) => {
+                        const retry = () => {
+                            resolve(load())
+                            retries++
+                        }
+                        const fail = () => {
+                            reject()
+                        }
+                        onError(retry, fail, retries)
+                    })
+                } else {
+                    throw error
+                }
+            })
+    }
     
     return {
         name: 'AsyncComponentWrapper',
@@ -21,6 +43,7 @@ function defineAsyncComponent(options) {
             const loading = ref(false)
             const placeholder = {type: 'div', children: ''}
 
+            let timer = null
             let delayTimer = null
             if (delay) {
                 delayTimer = setTimeout(() => {
@@ -30,7 +53,7 @@ function defineAsyncComponent(options) {
                 loading.value = true
             }
 
-            loader().then(c => {
+            load().then(c => {
                 loaded.value = true
                 innerCompo = c
             })
@@ -38,16 +61,14 @@ function defineAsyncComponent(options) {
                 .finally(() => {
                     loading.value = false
                     clearTimeout(delayTimer)
+                    clearTimeout(timer)
                 })
 
-            let timer = null
             if (timeout) {
                 timer = setTimeout(() => {
                     error.value = new Error('超时')
                 }, timeout)
             }
-
-            onUmounted(() => clearTimeout(timer))
 
             return () => {
                 return loaded.value
@@ -75,5 +96,37 @@ const AsyncComp = defineAsyncComponent({
     errorComponent: ErrorComponent,
     // 如果提供了一个 timeout 时间限制，并超时了
     // 也会显示这里配置的报错组件，默认值是：Infinity
-    timeout: 3000
+    timeout: 3000,
+    onError: (retry, reject, retries) => {
+        if (retries < 5) {
+            retry()
+        } else {
+            reject()
+            console.log('retries', retries)
+        }
+    }
 })
+
+// 测试comp
+// function throwError(text) {
+//     throw new Error(text)
+// }
+// let control = true
+//
+// const AsyncComp = defineAsyncComponent({
+//     loader: () => Promise.resolve().then(() => {
+//         if (control) {
+//             throwError('loader Error')
+//         } else {
+//             console.log('ok')
+//         }
+//     }),
+//     onError: (retry, reject, retries) => {
+//         if (retries < 5) {
+//             retry()
+//         } else {
+//             reject()
+//             console.log('retries', retries)
+//         }
+//     }
+// })
