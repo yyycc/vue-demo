@@ -130,5 +130,5 @@ function parser(str) {
 }
 
 const template = `<div><p>Vue</p><p>Template</p></div>`
-const templateAST = parse(template)
+const templateAST = parser(template)
 console.log('templateAST', templateAST)

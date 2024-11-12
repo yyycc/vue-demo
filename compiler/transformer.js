@@ -78,7 +78,6 @@ function transformText(node) {
 function transformElement(node) {
     return () => {
         if (node.type === 'Element') {
-            debugger
             const callExp = createCallExpression('h', [
                 createStringLiteral(node.tag)
             ])
@@ -97,7 +96,7 @@ function transformRoot(node) {
         if (node.type === 'Root') {
             const vnodeJSAST = node.children[0].jsNode
             node.jsNode = {
-                type: 'FunctionalDecl',
+                type: 'FunctionDecl',
                 id: createIdentifier('render'),
                 params: [],
                 body: [
@@ -135,9 +134,7 @@ function transform(ast) {
         ]
     }
     traverseNode(ast, context)
-    return ast
 }
 
-const jsAST = transform(templateAST)
-console.log(jsAST.jsNode)
+transform(templateAST)
 
