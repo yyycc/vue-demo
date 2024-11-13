@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="">
+<body>
+<!--<div id='tra' class="box">transition</div>-->
+</body>
+<script>
+    // 进场
+    const el = document.createElement('div')
+    el.classList.add('box')
+    el.classList.add('enter-from')
+    el.classList.add('enter-active')
+    
+    document.body.appendChild(el)
+    
+    requestAnimationFrame(() => {
+        el.classList.remove('enter-from')
+        el.classList.add('enter-to')
+        
+        el.addEventListener('transitionend', () => {
+            el.classList.remove('enter-to')
+            el.classList.remove('enter-active')
+        })
+    })
+    
+    // 离场
+    el.addEventListener('click', () => {
+        const performRemove = () => el.parentNode.removeChild(el)
+        el.classList.add('leave-from')
+        el.classList.add('leave-active')
+
+        requestAnimationFrame(() => {
+            el.classList.remove('leave-from')
+            el.classList.add('leave-to')
+
+            el.addEventListener('transitionend', () => {
+                el.classList.remove('leave-to')
+                el.classList.remove('leave-active')
+                performRemove()
+            })
+        })
+    })
+</script>
+<style>
+    .enter-from,
+    .leave-to {
+        transform: translateX(200px);
+    }
+
+    .enter-to,
+    .leave-from {
+        transform: translateX(0);
+    }
+
+    .enter-active,
+    .leave-active {
+        transition: transform 1s ease-in-out;
+    }
+
+    .box {
+        width: 100px;
+        height: 100px;
+        background-color: red;
+    }
+</style>
+</html>
